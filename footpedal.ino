@@ -6,51 +6,68 @@
   See README.md for target information, revision history, feature requests, etc.
 */
 
-#include <ProTrinketKeyboard.h>  // Ensure the library is installed
+// Library initialization
+#include <ProTrinketKeyboard.h>
+#include "buttonhandler.h"
 
-// Switches are connected from ground to these defined pins
-const int PIN_BUTTON_LEFT = 8;
-const int PIN_BUTTON_MIDDLE = 5;
-const int PIN_BUTTON_RIGHT = 3;
+// Assign Arduino pins
+#define pushButtonLeft 8
+#define pushButtonMiddle 5
+#define pushButtonRight 3
+
+enum { BTN_NOPRESS = 0, BTN_SHORTPRESS, BTN_LONGPRESS };
+
+// instantiate button objects
+ButtonHandler keyLeft(pushButtonLeft);
+ButtonHandler keyMiddle(pushButtonMiddle);
+ButtonHandler keyRight(pushButtonRight);
 
 void setup()
 {
-  // Declare button pins as inputs
-  pinMode(PIN_BUTTON_LEFT, INPUT);
-  pinMode(PIN_BUTTON_MIDDLE, INPUT);
-  pinMode(PIN_BUTTON_RIGHT, INPUT);
-  
-  // setting input pins to high means turning on internal pull-up resistors
-  digitalWrite(PIN_BUTTON_LEFT, HIGH);
-  digitalWrite(PIN_BUTTON_MIDDLE, HIGH);
-  digitalWrite(PIN_BUTTON_RIGHT, HIGH);
-  // remember, the buttons are active-low, they read LOW when they are not pressed
+  keyLeft.init();
+  keyMiddle.init();
+  keyRight.init();
 
-  // start USB stuff
+  // start USB keyboard
   TrinketKeyboard.begin();
 }
 
 void loop()
 {
   TrinketKeyboard.poll();
-  // poll function must be called >= 10 ms or keystroke entered
+  // poll function must be called <= 10 ms or keystroke entered
   // else computer may think device has stopped working
 
-  if (digitalRead(PIN_BUTTON_LEFT) == LOW)
-  {
-    TrinketKeyboard.pressKey(0, KEYCODE_A);
+  switch (keyLeft.handle()) {
+  case BTN_SHORTPRESS:
+    TrinketKeyboard.pressKey(0, KEYCODE_H);
     TrinketKeyboard.pressKey(0, 0); // this releases the key
+    Serial.println("Left button short press"); //debug text
+    break;
+  case BTN_LONGPRESS:
+    Serial.println("Left button long press"); //debug text
+    break;
   }
 
-  if (digitalRead(PIN_BUTTON_MIDDLE) == LOW)
-  {
-    TrinketKeyboard.pressKey(0, KEYCODE_B);
+  switch (keyMiddle.handle()) {
+  case BTN_SHORTPRESS:
+    TrinketKeyboard.pressKey(0, KEYCODE_J);
     TrinketKeyboard.pressKey(0, 0); // this releases the key
+    Serial.println("Middle button short press"); //debug text
+    break;
+  case BTN_LONGPRESS:
+    Serial.println("Middle button long press"); //debug text
+    break;
   }
-  
-  if (digitalRead(PIN_BUTTON_RIGHT) == LOW)
-  {
-    TrinketKeyboard.pressKey(0, KEYCODE_C);
+
+  switch (keyRight.handle()) {
+  case BTN_SHORTPRESS:
+    TrinketKeyboard.pressKey(0, KEYCODE_N);
     TrinketKeyboard.pressKey(0, 0); // this releases the key
+    Serial.println("Right button short press"); //debug text
+    break;
+  case BTN_LONGPRESS:
+    Serial.println("Right button long press"); //debug text
+    break;
   }
 }
