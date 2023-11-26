@@ -16,11 +16,12 @@
 #define pushButtonRight 3
 
 enum { BTN_NOPRESS = 0, BTN_SHORTPRESS, BTN_LONGPRESS };
+const int buttonLongPressDelay = 3000;
 
 // instantiate button objects
-ButtonHandler keyLeft(pushButtonLeft);
-ButtonHandler keyMiddle(pushButtonMiddle);
-ButtonHandler keyRight(pushButtonRight);
+ButtonHandler keyLeft(pushButtonLeft,buttonLongPressDelay);
+ButtonHandler keyMiddle(pushButtonMiddle,buttonLongPressDelay);
+ButtonHandler keyRight(pushButtonRight,buttonLongPressDelay);
 
 void setup()
 {
