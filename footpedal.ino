@@ -1,33 +1,33 @@
 /*
   Project Name:   footpedal
-  Developer:      Eric Klein Jr. (temp2@ericklein.com)
   Description:    USB keyboard from foot pedal device
-
-  See README.md for target information, revision history, feature requests, etc.
 */
 
 // Library initialization
 #include <ProTrinketKeyboard.h>
-#include "buttonhandler.h"
-
-// Assign Arduino pins
-#define pushButtonLeft 8
-#define pushButtonMiddle 5
-#define pushButtonRight 3
-
-enum { BTN_NOPRESS = 0, BTN_SHORTPRESS, BTN_LONGPRESS };
-const int buttonLongPressDelay = 3000;
+#include <ezButton.h>
+#include "config.h"
 
 // instantiate button objects
-ButtonHandler keyLeft(pushButtonLeft,buttonLongPressDelay);
-ButtonHandler keyMiddle(pushButtonMiddle,buttonLongPressDelay);
-ButtonHandler keyRight(pushButtonRight,buttonLongPressDelay);
+ezButton buttonLeft(buttonLeftPin);
+ezButton buttonMiddle(buttonMiddlePin);
+ezButton buttonRight(buttonRightPin);
 
 void setup()
 {
-  keyLeft.init();
-  keyMiddle.init();
-  keyRight.init();
+  // handle Serial first so debugMessage() works
+  #ifdef DEBUG
+    Serial.begin(115200);
+    // wait for serial port connection
+    while (!Serial);
+  #endif
+
+  debugMessage("footpedal started",1);
+  debugMessage(String("debounce time set to ") + buttonDebounceDelay + " ms",1);
+
+  buttonLeft.setDebounceTime(buttonDebounceDelay); 
+  buttonMiddle.setDebounceTime(buttonDebounceDelay); 
+  buttonRight.setDebounceTime(buttonDebounceDelay); 
 
   // start USB keyboard
   TrinketKeyboard.begin();
@@ -35,40 +35,44 @@ void setup()
 
 void loop()
 {
-  TrinketKeyboard.poll();
   // poll function must be called <= 10 ms or keystroke entered
   // else computer may think device has stopped working
+  TrinketKeyboard.poll();
 
-  switch (keyLeft.handle()) {
-  case BTN_SHORTPRESS:
+  buttonLeft.loop();   // MUST call the loop() function first
+  buttonMiddle.loop();
+  buttonRight.loop();
+
+  if (buttonLeft.isPressed())
+  {
     TrinketKeyboard.pressKey(0, KEYCODE_H);
     TrinketKeyboard.pressKey(0, 0); // this releases the key
-    Serial.println("Left button short press"); //debug text
-    break;
-  case BTN_LONGPRESS:
-    Serial.println("Left button long press"); //debug text
-    break;
+    debugMessage("Left button press",1);
   }
 
-  switch (keyMiddle.handle()) {
-  case BTN_SHORTPRESS:
+  if (buttonMiddle.isPressed())
+  {
     TrinketKeyboard.pressKey(0, KEYCODE_J);
-    TrinketKeyboard.pressKey(0, 0); // this releases the key
-    Serial.println("Middle button short press"); //debug text
-    break;
-  case BTN_LONGPRESS:
-    Serial.println("Middle button long press"); //debug text
-    break;
+    TrinketKeyboard.pressKey(0, 0);
+    debugMessage("Middle button press",1);
   }
 
-  switch (keyRight.handle()) {
-  case BTN_SHORTPRESS:
+  if (buttonRight.isPressed())
+  {
     TrinketKeyboard.pressKey(0, KEYCODE_N);
-    TrinketKeyboard.pressKey(0, 0); // this releases the key
-    Serial.println("Right button short press"); //debug text
-    break;
-  case BTN_LONGPRESS:
-    Serial.println("Right button long press"); //debug text
-    break;
+    TrinketKeyboard.pressKey(0, 0);
+    debugMessage("Right button press",1);
   }
+}
+
+void debugMessage(String messageText, int messageLevel)
+// wraps Serial.println as #define conditional
+{
+  #ifdef DEBUG
+    if (messageLevel <= DEBUG)
+    {
+      Serial.println(messageText);
+      Serial.flush();  // Make sure the message gets output (before any sleeping...)
+    }
+  #endif
 }
